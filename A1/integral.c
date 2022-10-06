@@ -50,20 +50,15 @@ double integrate(int num_threads, int samples, int a, int b, double (*f)(double)
 	omp_set_num_threads(num_threads);
 
 	double sum = 0;
-	int new_samples = samples / num_threads;
+	// int new_samples = samples / num_threads;
 
-#pragma omp parallel
+#pragma omp parallel for reduction(+ \
+								   : sum)
+
+	for (int i = 0; i < samples; i++)
 	{
-		double square_sum = 0;
-		for (int i = 0; i < new_samples; i++)
-		{
-			square_sum += f(step * i + a) * (b - a);
-		}
-
-#pragma omp critical
-		{
-			sum += square_sum;
-		}
+		sum += f(step * i + a) * (b - a);
 	}
+
 	return sum / (double)samples;
 }
