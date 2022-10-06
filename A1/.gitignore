@@ -5,3 +5,4 @@ test
 test2
 omp_hello
 pthreads_hello
+function.o
