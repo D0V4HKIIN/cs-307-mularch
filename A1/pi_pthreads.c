@@ -9,6 +9,7 @@ SCIPER		: 361946
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include "utility.h"
 
 double calculate_pi(int num_threads, int samples);
@@ -40,21 +41,22 @@ int main(int argc, const char *argv[])
 
 struct thread_args
 {
-	int *counter;
+	int *sum;
 	int samples;
 	int *thread_num;
 };
 
-void *work(void *a)
+sem_t mutex;
+
+void *pi_thread(void *a)
 {
 	struct thread_args *args = (struct thread_args *)a;
 
-	// printf("found args at %p\n", args);
+	int counter = 0;
 
-	int *counter = args->counter;
+	int *sum = args->sum;
 	int samples = args->samples;
 	int thread_num = *(args->thread_num);
-	// printf("starting %d\n", thread_num);
 
 	rand_gen random = init_rand_pthreads(thread_num);
 	for (int i = 0; i < samples; i++)
@@ -65,7 +67,7 @@ void *work(void *a)
 		if (x * x + y * y < 1)
 		{
 			{
-				(*counter)++;
+				counter++;
 			}
 		}
 	}
@@ -74,31 +76,34 @@ void *work(void *a)
 
 	free(args);
 
+	// critical section when summing
+	sem_wait(&mutex);
+	(*sum) += counter;
+	sem_post(&mutex);
+
 	return 0;
 }
 
 double calculate_pi(int num_threads, int samples)
 {
 	/* Your code goes here */
-	int *inside = calloc(num_threads, sizeof(int));
+	int sum = 0;
 
 	int new_samples = samples / num_threads;
 	pthread_t tid[num_threads];
 	int thread_num[num_threads];
+	sem_init(&mutex, 0, 1);
 
 	for (int i = 0; i < num_threads; i++)
 	{
-		// printf("creating thread %d\n", i);
 		thread_num[i] = i;
 		struct thread_args *args = malloc(sizeof(struct thread_args));
 
-		args->counter = &(inside[i]);
+		args->sum = &sum;
 		args->samples = new_samples;
 		args->thread_num = &thread_num[i];
 
-		// printf("thread_num in thread_args is: %p, value is %d\n", args->thread_num, *args->thread_num);
-		// printf("args is at %p\n", &args);
-		pthread_create(&tid[i], NULL, work, (void *)(args));
+		pthread_create(&tid[i], NULL, pi_thread, (void *)(args));
 	}
 
 	/* All threads join master thread and disband */
@@ -107,14 +112,7 @@ double calculate_pi(int num_threads, int samples)
 		pthread_join(tid[i], NULL);
 	}
 
-	int sum = 0;
-	for (int i = 0; i < num_threads; i++)
-	{
-		// printf("then inside is: %d and thread_num is: %d\n", inside[i], thread_num[i]);
-		sum += inside[i];
-	}
+	sem_destroy(&mutex);
 
-	double pi = (sum / (float)samples) * 4;
-
-	return pi;
+	return (sum / (float)samples) * 4;
 }
