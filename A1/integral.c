@@ -45,23 +45,25 @@ int main(int argc, const char *argv[])
 double integrate(int num_threads, int samples, int a, int b, double (*f)(double))
 {
 	/* Your code goes here */
-	double *squares = calloc(num_threads, sizeof(double));
 	double step = (b - a) / (double)(samples - 1);
 
 	omp_set_num_threads(num_threads);
 
-#pragma omp parallel for
-	for (int i = 0; i < samples; i++)
-	{
-		squares[omp_get_thread_num()] += f(step * i + a) * (b - a);
-	}
-
 	double sum = 0;
-	for (int i = 0; i < num_threads; i++)
-	{
-		sum += squares[i];
-		printf("squares is %f\n", squares[i]);
-	}
+	int new_samples = samples / num_threads;
 
+#pragma omp parallel
+	{
+		double square_sum = 0;
+		for (int i = 0; i < new_samples; i++)
+		{
+			square_sum += f(step * i + a) * (b - a);
+		}
+
+#pragma omp critical
+		{
+			sum += square_sum;
+		}
+	}
 	return sum / (double)samples;
 }
