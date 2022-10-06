@@ -48,7 +48,6 @@ double calculate_pi(int num_threads, int samples)
 #pragma omp parallel
 	{
 		int inside = 0;
-		int tid = omp_get_thread_num();
 		rand_gen random = init_rand();
 		for (int i = 0; i < new_samples; i++)
 		{
@@ -65,7 +64,7 @@ double calculate_pi(int num_threads, int samples)
 
 		free_rand(random);
 
-#pragma critical
+#pragma omp critical
 		{
 			sum += inside;
 		}
