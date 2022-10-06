@@ -41,14 +41,15 @@ double calculate_pi(int num_threads, int samples)
 {
 
 	/* Your code goes here */
-	int *inside = calloc(num_threads, sizeof(int));
+	int sum = 0;
 	omp_set_num_threads(num_threads);
 	int new_samples = samples / num_threads;
-	int tid;
 
-#pragma omp parallel private(tid)
+	printf("time to 1: %.4gs.\n", elapsed_time());
+#pragma omp parallel
 	{
-		tid = omp_get_thread_num();
+		int inside = 0;
+		int tid = omp_get_thread_num();
 		rand_gen random = init_rand();
 		for (int i = 0; i < new_samples; i++)
 		{
@@ -58,21 +59,18 @@ double calculate_pi(int num_threads, int samples)
 			if (x * x + y * y < 1)
 			{
 				{
-					inside[tid]++;
+					inside++;
 				}
 			}
 		}
 
 		free_rand(random);
+
+#pragma critical
+		{
+			sum += inside;
+		}
 	}
 
-	int sum = 0;
-	for (int i = 0; i < num_threads; i++)
-	{
-		sum += inside[i];
-	}
-
-	double pi = (sum / (float)samples) * 4;
-
-	return pi;
+	return (sum / (float)samples) * 4;
 }
