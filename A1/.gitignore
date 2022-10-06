@@ -1,6 +1,6 @@
 integral
 pi
-pi_threads
+pi_pthreads
 test
 test2
 omp_hello
