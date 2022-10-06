@@ -45,7 +45,6 @@ double calculate_pi(int num_threads, int samples)
 	omp_set_num_threads(num_threads);
 	int new_samples = samples / num_threads;
 
-	printf("time to 1: %.4gs.\n", elapsed_time());
 #pragma omp parallel
 	{
 		int inside = 0;
