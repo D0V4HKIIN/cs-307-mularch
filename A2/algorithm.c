@@ -18,11 +18,12 @@ void simulate(double *input, double *output, int threads, int length, int iterat
 	double *thread_output;
 
 	omp_set_num_threads(threads);
-	
+
 	// Parallelize this!!
-	for (int n = 0; n < iterations; n++)
+
+	#pragma omp parallel private(thread_output)
 	{
-		#pragma omp parallel private(thread_output)
+		for (int n = 0; n < iterations; n++)
 		{
 			thread_output = (double *)calloc(length, sizeof(double));
 			#pragma omp for
@@ -36,19 +37,21 @@ void simulate(double *input, double *output, int threads, int length, int iterat
 					THREAD_OUTPUT(j) = (INPUT(i - 1, j - 1) + INPUT(i - 1, j) + INPUT(i - 1, j + 1) +
 										INPUT(i, j - 1) + INPUT(i, j) + INPUT(i, j + 1) +
 										INPUT(i + 1, j - 1) + INPUT(i + 1, j) + INPUT(i + 1, j + 1)) /
-									9;
+									   9;
 				}
-				
-					for (int j = 1; j < length - 1; j++)
-					{
-						OUTPUT(i, j) = THREAD_OUTPUT(j);
-					}
-			
+
+				for (int j = 1; j < length - 1; j++)
+				{
+					OUTPUT(i, j) = THREAD_OUTPUT(j);
+				}
+			}
+
+			#pragma omp single
+			{
+				temp = input;
+				input = output;
+				output = temp;
 			}
 		}
-
-		temp = input;
-		input = output;
-		output = temp;
 	}
 }
