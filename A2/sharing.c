@@ -37,20 +37,34 @@ int main(int argc, const char *argv[])
 
 int perform_buckets_computation(int num_threads, int num_samples, int num_buckets)
 {
+
 	volatile int *histogram = (int *)calloc(num_buckets, sizeof(int));
+
 	omp_set_num_threads(num_threads);
 
-#pragma omp parallel
+	rand_gen generator;
+	volatile int *thread_histogram;
+#pragma omp parallel private(generator, thread_histogram)
 	{
-		rand_gen generator = init_rand();
-#pragma omp parallel for
+		generator = init_rand();
+		thread_histogram = (int *)calloc(num_buckets, sizeof(int));
+
+#pragma omp for
 		for (int i = 0; i < num_samples; i++)
 		{
 			int val = next_rand(generator) * num_buckets;
-			histogram[val]++;
+			thread_histogram[val]++;
 		}
-
 		free_rand(generator);
+
+#pragma omp critical
+		{
+			for (int i = 0; i < num_buckets; i++)
+			{
+				histogram[i] += thread_histogram[i];
+			}
+		}
 	}
+
 	return 0;
 }
