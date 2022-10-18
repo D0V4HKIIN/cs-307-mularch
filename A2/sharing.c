@@ -1,8 +1,8 @@
 /*
 ============================================================================
 Filename    : pi.c
-Author      : Jonas Bonnaudet / Alexander Müller
-SCIPER		: 361946 / ...
+Author      : Jonas Bonnaudet and Alexander Müller
+SCIPER		: 361946 and ...
 ============================================================================
 */
 
@@ -10,7 +10,7 @@ SCIPER		: 361946 / ...
 #include <stdlib.h>
 #include "utility.h"
 
-int perform_bucket_computation(int, int, int);
+int perform_buckets_computation(int num_threads, int num_samples, int num_buckets);
 
 int main(int argc, const char *argv[])
 {
@@ -38,12 +38,19 @@ int main(int argc, const char *argv[])
 int perform_buckets_computation(int num_threads, int num_samples, int num_buckets)
 {
 	volatile int *histogram = (int *)calloc(num_buckets, sizeof(int));
-	rand_gen generator = init_rand();
-	for (int i = 0; i < num_samples; i++)
+	omp_set_num_threads(num_threads);
+
+#pragma omp parallel
 	{
-		int val = next_rand(generator) * num_buckets;
-		histogram[val]++;
+		rand_gen generator = init_rand();
+#pragma omp parallel for
+		for (int i = 0; i < num_samples; i++)
+		{
+			int val = next_rand(generator) * num_buckets;
+			histogram[val]++;
+		}
+
+		free_rand(generator);
 	}
-	free_rand(generator);
 	return 0;
 }
