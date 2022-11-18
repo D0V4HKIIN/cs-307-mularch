@@ -3,6 +3,8 @@
 #include "utility.h"
 #include <stdint.h>
 
+#define UINTMAX (uint8_t)(-1)
+
 #define GB (uint64_t)(1 << 30)
 #define SIZE (uint64_t)(8 * GB)
 
@@ -19,8 +21,7 @@ inline void init_array(rand_gen gen)
 	// Change this part
 	for (uint64_t i = 0; i < SIZE; i++)
 	{
-		arr[i] = next_rand(gen);
-		printf("%u\n", arr[i]);
+		arr[i] = next_rand(gen) * UINTMAX;
 	}
 }
 
