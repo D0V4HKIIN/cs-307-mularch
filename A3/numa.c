@@ -20,6 +20,7 @@ inline void init_array(rand_gen gen)
 	for (uint64_t i = 0; i < SIZE; i++)
 	{
 		arr[i] = next_rand(gen);
+		printf("%u\n", arr[i])
 	}
 }
 
@@ -33,6 +34,9 @@ int main()
 	rand_gen gen = init_rand();
 
 	init_array(gen);
+	
+	// don't forget to free man >:-(
+	free_rand(gen);
 
 	// Start timer
 	set_clock();
