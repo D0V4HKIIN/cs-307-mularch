@@ -13,7 +13,8 @@ volatile uint8_t *arr;
 inline uint64_t next_addr(uint64_t i)
 {
 	// Change this part
-	return 1;
+	return arr[i];
+
 }
 
 inline void init_array(rand_gen gen)
@@ -21,7 +22,7 @@ inline void init_array(rand_gen gen)
 	// Change this part
 	for (uint64_t i = 0; i < SIZE; i++)
 	{
-		arr[i] = next_rand(gen) * UINTMAX;
+		arr[i] = 8*( (int)(next_rand(gen) * 8 + 8));
 	}
 }
 
@@ -35,7 +36,6 @@ int main()
 	rand_gen gen = init_rand();
 
 	init_array(gen);
-	
 	// don't forget to free man >:-(
 	free_rand(gen);
 
