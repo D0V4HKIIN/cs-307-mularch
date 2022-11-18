@@ -20,7 +20,7 @@ inline void init_array(rand_gen gen)
 	for (uint64_t i = 0; i < SIZE; i++)
 	{
 		arr[i] = next_rand(gen);
-		printf("%u\n", arr[i])
+		printf("%u\n", arr[i]);
 	}
 }
 
