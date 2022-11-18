@@ -12,17 +12,23 @@ volatile uint8_t *arr;
 
 inline uint64_t next_addr(uint64_t i)
 {
-	// Change this part
-	return 1;
+	if(i == 0)
+		return SIZE -1;
+	// end the loop
+	if(i == 1)
+		return SIZE;
+	return -1;
 }
 
 inline void init_array(rand_gen gen)
 {
+	printf("initializing array\n");fflush(stdout);
 	// Change this part
 	for (uint64_t i = 0; i < SIZE; i++)
 	{
 		arr[i] = next_rand(gen) * UINTMAX;
 	}
+	printf("array initialized!\n");
 }
 
 int main()
