@@ -14,8 +14,9 @@ void *thread1Func(void *param){
         while(t1block); // Wait for blocker to be removed
         t1block = true; // Set up blocker
 
+		// X = 1 and r1 = Y is the reorderings that are measured
         X = 1;
-        asm volatile("" ::: "memory"); // Prevent any compiler reordering
+        asm volatile("mfence" ::: "memory"); // Prevent any compiler reordering
         r1 = Y;
 
         t1fin = true; // Signal iteration end
@@ -28,8 +29,9 @@ void *thread2Func(void *param){
         while(t2block); // Wait for blocker to be removed
         t2block = true; // Set up blocker
 
+		// Y = 1 and r2 = X is the reorderings that are measured
         Y = 1;
-        asm volatile("" ::: "memory"); // Prevent any compiler reordering
+        asm volatile("mfence" ::: "memory"); // Prevent any compiler reordering
         r2 = X;
 
         t2fin = true; // Signal iteration end
