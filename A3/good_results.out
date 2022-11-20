@@ -1,14 +1,11 @@
-make: Nothing to be done for 'all'.
-compiled
-A3.pdf execute_numa.sh Makefile numa numa.c order order.c utility.h INTERLEAVED A3.pdf execute_numa.sh Makefile numa numa.c order order.c utility.h
-initializing array
-array initialized!
-Traversing 8 GB array took total time = 1.555 seconds, number of accesses = 93369658, 1.665e-08 seconds per access
-A3.pdf execute_numa.sh Makefile numa numa.c order order.c remote_fastest.out utility.h LOCAL ALLOC A3.pdf execute_numa.sh Makefile numa numa.c order order.c remote_fastest.out utility.h
-initializing array
-array initialized!
-Traversing 8 GB array took total time = 1.774 seconds, number of accesses = 93369658, 1.9e-08 seconds per access
-A3.pdf execute_numa.sh Makefile numa numa.c order order.c remote_fastest.out utility.h PREFFERED / REMOTE A3.pdf execute_numa.sh Makefile numa numa.c order order.c remote_fastest.out utility.h
-initializing array
-array initialized!
-Traversing 8 GB array took total time = 1.874 seconds, number of accesses = 93369658, 2.007e-08 seconds per access
+INTERLEAVED
+
+Traversing 8 GB array took total time = 1.576 seconds, number of accesses = 93369658, 1.688e-08 seconds per access
+
+LOCAL ALLOC
+
+Traversing 8 GB array took total time = 1.356 seconds, number of accesses = 93369658, 1.452e-08 seconds per access
+
+PREFFERED / REMOTE
+
+Traversing 8 GB array took total time = 1.933 seconds, number of accesses = 93369658, 2.07e-08 seconds per access
