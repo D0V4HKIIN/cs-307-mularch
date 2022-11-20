@@ -1,0 +1,7 @@
+STARTING ATFri Nov 18 13:15:15 CET 2022
+gcc -std=gnu99 -O3 -fopenmp -Wall numa.c -o numa
+numa
+ERROR: Time per access is too small. You have to further deoptimize the program to measure reasonable time difference.
+Traversing 8 GB array took total time = 2.653 seconds, number of accesses = 8589934592, 3.088e-10 seconds per access
+rm -f numa order
+FINISHED AT Fri Nov 18 13:15:23 CET 2022
