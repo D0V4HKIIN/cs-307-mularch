@@ -1,0 +1,6 @@
+same socket
+996833 memory re-orderings detected in 1000000 iterations - 99 percent
+different socket1
+1307 memory re-orderings detected in 1000000 iterations - 0 percent
+different socket2
+441793 memory re-orderings detected in 1000000 iterations - 44 percent
