@@ -47,6 +47,7 @@ inline void init_array(rand_gen gen)
 	// Change this part
 	for (uint64_t i = 0; i < SIZE; i++)
 	{
+		// skipping ther first cache block and choosing randomly one of the 8 after
 		arr[i] = 8*( (int)(next_rand(gen) * 8 + 8));
 	}
 	printf("array initialized!\n");fflush(stdout);
