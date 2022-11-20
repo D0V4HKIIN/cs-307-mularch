@@ -36,13 +36,9 @@ inline uint64_t next_addr_cache_miss(uint64_t i)
 
 inline uint64_t next_addr(uint64_t i)
 {
-<<<<<<< HEAD
 	// Change this part
 	return arr[i];
 
-=======
-	return arr[i];
->>>>>>> refs/remotes/origin/master
 }
 
 inline void init_array(rand_gen gen)
