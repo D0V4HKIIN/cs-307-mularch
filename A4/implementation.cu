@@ -46,6 +46,40 @@ void array_process(double *input, double *output, int length, int iterations)
     }
 }
 
+// copied from CPU baseline
+__global__ void GPU_process(double *input, double *output, int length, int iterations)
+{
+    double *temp;
+
+    for(int n=0; n<(int) iterations; n++)
+    {
+        for(int i=1; i<length-1; i++)
+        {
+            for(int j=1; j<length-1; j++)
+            {
+                output[(i)*(length)+(j)] = (input[(i-1)*(length)+(j-1)] +
+                                            input[(i-1)*(length)+(j)]   +
+                                            input[(i-1)*(length)+(j+1)] +
+                                            input[(i)*(length)+(j-1)]   +
+                                            input[(i)*(length)+(j)]     +
+                                            input[(i)*(length)+(j+1)]   +
+                                            input[(i+1)*(length)+(j-1)] +
+                                            input[(i+1)*(length)+(j)]   +
+                                            input[(i+1)*(length)+(j+1)] ) / 9;
+
+            }
+        }
+        output[(length/2-1)*length+(length/2-1)] = 1000;
+        output[(length/2)*length+(length/2-1)]   = 1000;
+        output[(length/2-1)*length+(length/2)]   = 1000;
+        output[(length/2)*length+(length/2)]     = 1000;
+
+        temp = input;
+        input = output;
+        output = temp;
+    }
+}
+
 
 // GPU Optimized function
 void GPU_array_process(double *input, double *output, int length, int iterations)
@@ -61,16 +95,27 @@ void GPU_array_process(double *input, double *output, int length, int iterations
 
     /* Preprocessing goes here */
 
-    double* gpu_array;
+    double* gpu_input;
+    double* gpu_output;
     // malloc on gpu
-    cudaMalloc( (void**)&gpu_array, length);
+    cudaMalloc( (void**)&gpu_input, length);
+    cudaMalloc( (void**)&gpu_output, length);
 
     cudaEventRecord(cpy_H2D_start);
     /* Copying array from host to device goes here */
-    // copy data
+    // copy data input
     cudaMemcpy(
-        (void*)gpu_array,           /* DEST */
+        (void*)gpu_input,           /* DEST */
         (void*)input,               /* SRC */
+        length,                     /* NBYTES */
+        cudaMemcpyHostToDevice      /* DIRECTION */
+    );
+    
+    // copy data output
+    // not sure if needed
+    cudaMemcpy(
+        (void*)gpu_output,           /* DEST */
+        (void*)output,               /* SRC */
         length,                     /* NBYTES */
         cudaMemcpyHostToDevice      /* DIRECTION */
     );
@@ -80,11 +125,25 @@ void GPU_array_process(double *input, double *output, int length, int iterations
 
     cudaEventRecord(comp_start);
     /* GPU calculation goes here */
+    dim3 thrsPerBlock(3,4); // 3x4
+    dim3 nBlks( 2,3 ); // 2x3
+    GPU_process<<<nBlks, thrsPerBlock>>>(gpu_input, gpu_output, length, iterations);
+
     cudaEventRecord(comp_end);
     cudaEventSynchronize(comp_end);
 
     cudaEventRecord(cpy_D2H_start);
     /* Copying array from device to host goes here */
+    
+    // copy output back
+    // not sure if needed
+    cudaMemcpy(
+        (void*)output,           /* DEST */
+        (void*)gpu_output,               /* SRC */
+        length,                     /* NBYTES */
+        cudaMemcpyDeviceToHost      /* DIRECTION */
+    );
+    
     cudaEventRecord(cpy_D2H_end);
     cudaEventSynchronize(cpy_D2H_end);
 
