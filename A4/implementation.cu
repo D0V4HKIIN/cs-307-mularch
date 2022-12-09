@@ -143,11 +143,17 @@ void GPU_array_process(double *input, double *output, int length, int iterations
         length,                     /* NBYTES */
         cudaMemcpyDeviceToHost      /* DIRECTION */
     );
-    
+
     cudaEventRecord(cpy_D2H_end);
     cudaEventSynchronize(cpy_D2H_end);
 
     /* Postprocessing goes here */
+
+    // free gpu_input and gpu_output
+    // should cudaFreeArray() be used?
+    cudaFree( (void**)&gpu_input);
+    cudaFree( (void**)&gpu_output);
+
 
     float time;
     cudaEventElapsedTime(&time, cpy_H2D_start, cpy_H2D_end);
