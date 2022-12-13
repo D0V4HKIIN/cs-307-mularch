@@ -33,10 +33,10 @@ void init(double *x, int length)
 }
 
 //Save the two-dimensional array in a csv file
-void save(double *x, int length)
+void save(double *x, int length, const char fileName[])
 {
     ofstream output_file;
-    output_file.open("outputmatrix.csv");
+    output_file.open(fileName);
     for(int i=0; i<length; i++)
     {
         for(int j=0; j<length-1; j++)

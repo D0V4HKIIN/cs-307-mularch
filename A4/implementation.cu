@@ -49,36 +49,34 @@ void array_process(double *input, double *output, int length, int iterations)
 // copied from CPU baseline
 __global__ void GPU_process(double *input, double *output, int length, int iterations)
 {
-    double *temp;
+    int i = (blockIdx.x * blockDim.x) + threadIdx.x + 1;
+    int j = (blockIdx.y * blockDim.y) + threadIdx.y + 1;
 
-    for(int n=0; n<iterations; n++)
-    {
-        for(int i=1; i<length-1; i++)
-        {
-            for(int j=1; j<length-1; j++)
-            {
-                output[(i)*(length)+(j)] = (input[(i-1)*(length)+(j-1)] +
-                                            input[(i-1)*(length)+(j)]   +
-                                            input[(i-1)*(length)+(j+1)] +
-                                            input[(i)*(length)+(j-1)]   +
-                                            input[(i)*(length)+(j)]     +
-                                            input[(i)*(length)+(j+1)]   +
-                                            input[(i+1)*(length)+(j-1)] +
-                                            input[(i+1)*(length)+(j)]   +
-                                            input[(i+1)*(length)+(j+1)] ) / 9;
-            }
-        }
-       
+    int posInArray = (i)*(length)+(j);
+
+    output[posInArray] = (input[(i-1)*(length)+(j-1)] +
+                            input[(i-1)*(length)+(j)]   +
+                            input[(i-1)*(length)+(j+1)] +
+                            input[(i)*(length)+(j-1)]   +
+                            input[(i)*(length)+(j)]     +
+                            input[(i)*(length)+(j+1)]   +
+                            input[(i+1)*(length)+(j-1)] +
+                            input[(i+1)*(length)+(j)]   +
+                            input[(i+1)*(length)+(j+1)] ) / 9;
+    
+    if (posInArray == (length/2-1)*length+(length/2-1))
         output[(length/2-1)*length+(length/2-1)] = 1000;
-        output[(length/2)*length+(length/2-1)]   = 1000;
-        output[(length/2-1)*length+(length/2)]   = 1000;
-        output[(length/2)*length+(length/2)]     = 1000;
-
-        temp = input;
-        input = output;
-        output = temp;
-    }
+    
+    if (posInArray == (length/2)*length+(length/2-1))
+        output[(length/2)*length+(length/2-1)] = 1000;
+    
+    if (posInArray == (length/2-1)*length+(length/2))
+        output[(length/2-1)*length+(length/2)] = 1000;
+    
+    if (posInArray == (length/2)*length+(length/2))
+        output[(length/2)*length+(length/2)] = 1000;
 }
+
 
 
 // GPU Optimized function
@@ -124,10 +122,31 @@ void GPU_array_process(double *input, double *output, int length, int iterations
     cudaEventSynchronize(cpy_H2D_end);
 
     cudaEventRecord(comp_start);
+
     /* GPU calculation goes here */
-    dim3 thrsPerBlock(3,4); // 3x4
-    dim3 nBlks(2,3); // 2x3
-    GPU_process<<<1, 1>>>(gpu_input, gpu_output, length, iterations);
+    int thrsPerBlock = 8; 
+    int nBlks = ceil((double)(length -2)/thrsPerBlock);
+
+    dim3 thrsPerBlockDim(thrsPerBlock, thrsPerBlock);
+    dim3 nBlksDim(nBlks, nBlks);
+
+    for(int n=0; n<iterations; n++)
+    {
+        GPU_process<<<nBlksDim, thrsPerBlockDim>>>(gpu_input, gpu_output, length, iterations);
+
+        cudaDeviceSynchronize();
+        
+        double *temp;
+        temp = gpu_input;
+        gpu_input = gpu_output;
+        gpu_output = temp;
+    }
+    
+    // swap back
+    double *temp;
+    temp = gpu_input;
+    gpu_input = gpu_output;
+    gpu_output = temp;
 
     cudaEventRecord(comp_end);
     cudaEventSynchronize(comp_end);
