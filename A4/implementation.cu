@@ -51,12 +51,13 @@ __global__ void GPU_process(double *input, double *output, int length, int itera
 {
     double *temp;
 
-    for(int n=0; n<(int) iterations; n++)
+    for(int n=0; n<iterations; n++)
     {
         for(int i=1; i<length-1; i++)
         {
             for(int j=1; j<length-1; j++)
             {
+                printf("(%i, %i) ", i, j);
                 output[(i)*(length)+(j)] = (input[(i-1)*(length)+(j-1)] +
                                             input[(i-1)*(length)+(j)]   +
                                             input[(i-1)*(length)+(j+1)] +
@@ -66,9 +67,11 @@ __global__ void GPU_process(double *input, double *output, int length, int itera
                                             input[(i+1)*(length)+(j-1)] +
                                             input[(i+1)*(length)+(j)]   +
                                             input[(i+1)*(length)+(j+1)] ) / 9;
-
             }
+            printf("\n");
         }
+        printf("-----------------------------------------------------\n");
+       
         output[(length/2-1)*length+(length/2-1)] = 1000;
         output[(length/2)*length+(length/2-1)]   = 1000;
         output[(length/2-1)*length+(length/2)]   = 1000;
@@ -98,25 +101,25 @@ void GPU_array_process(double *input, double *output, int length, int iterations
     double* gpu_input;
     double* gpu_output;
     // malloc on gpu
-    cudaMalloc( (void**)&gpu_input, length);
-    cudaMalloc( (void**)&gpu_output, length);
+    cudaMalloc( (void**)&gpu_input, sizeof(double) * length * length);
+    cudaMalloc( (void**)&gpu_output, sizeof(double) * length* length);
 
     cudaEventRecord(cpy_H2D_start);
     /* Copying array from host to device goes here */
     // copy data input
     cudaMemcpy(
-        (void*)gpu_input,           /* DEST */
-        (void*)input,               /* SRC */
-        length,                     /* NBYTES */
+        gpu_input,                  /* DEST */
+        input,                      /* SRC */
+        sizeof(double) * length * length,    /* NBYTES */
         cudaMemcpyHostToDevice      /* DIRECTION */
     );
     
     // copy data output
     // not sure if needed
     cudaMemcpy(
-        (void*)gpu_output,           /* DEST */
-        (void*)output,               /* SRC */
-        length,                     /* NBYTES */
+        gpu_output,                 /* DEST */
+        output,                     /* SRC */
+        sizeof(double) * length * length,    /* NBYTES */
         cudaMemcpyHostToDevice      /* DIRECTION */
     );
 
@@ -125,9 +128,9 @@ void GPU_array_process(double *input, double *output, int length, int iterations
 
     cudaEventRecord(comp_start);
     /* GPU calculation goes here */
-    dim3 thrsPerBlock(1,1); // 3x4
-    dim3 nBlks(1,1); // 2x3
-    GPU_process<<<nBlks, thrsPerBlock>>>(gpu_input, gpu_output, length, iterations);
+    dim3 thrsPerBlock(3,4); // 3x4
+    dim3 nBlks(2,3); // 2x3
+    GPU_process<<<1, 1>>>(gpu_input, gpu_output, length, iterations);
 
     cudaEventRecord(comp_end);
     cudaEventSynchronize(comp_end);
@@ -138,9 +141,9 @@ void GPU_array_process(double *input, double *output, int length, int iterations
     // copy output back
     // not sure if needed
     cudaMemcpy(
-        (void*)output,           /* DEST */
-        (void*)gpu_output,               /* SRC */
-        length,                     /* NBYTES */
+        output,                     /* DEST */
+        gpu_output,                 /* SRC */
+        sizeof(double) * length * length,    /* NBYTES */
         cudaMemcpyDeviceToHost      /* DIRECTION */
     );
 
@@ -151,8 +154,8 @@ void GPU_array_process(double *input, double *output, int length, int iterations
 
     // free gpu_input and gpu_output
     // should cudaFreeArray() be used?
-    cudaFree( (void**)&gpu_input);
-    cudaFree( (void**)&gpu_output);
+    cudaFree(gpu_input);
+    cudaFree(gpu_output);
 
 
     float time;
