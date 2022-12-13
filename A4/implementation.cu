@@ -57,7 +57,6 @@ __global__ void GPU_process(double *input, double *output, int length, int itera
         {
             for(int j=1; j<length-1; j++)
             {
-                printf("(%i, %i) ", i, j);
                 output[(i)*(length)+(j)] = (input[(i-1)*(length)+(j-1)] +
                                             input[(i-1)*(length)+(j)]   +
                                             input[(i-1)*(length)+(j+1)] +
@@ -68,9 +67,7 @@ __global__ void GPU_process(double *input, double *output, int length, int itera
                                             input[(i+1)*(length)+(j)]   +
                                             input[(i+1)*(length)+(j+1)] ) / 9;
             }
-            printf("\n");
         }
-        printf("-----------------------------------------------------\n");
        
         output[(length/2-1)*length+(length/2-1)] = 1000;
         output[(length/2)*length+(length/2-1)]   = 1000;
