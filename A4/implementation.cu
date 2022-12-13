@@ -125,8 +125,8 @@ void GPU_array_process(double *input, double *output, int length, int iterations
 
     cudaEventRecord(comp_start);
     /* GPU calculation goes here */
-    dim3 thrsPerBlock(3,4); // 3x4
-    dim3 nBlks( 2,3 ); // 2x3
+    dim3 thrsPerBlock(1,1); // 3x4
+    dim3 nBlks(1,1); // 2x3
     GPU_process<<<nBlks, thrsPerBlock>>>(gpu_input, gpu_output, length, iterations);
 
     cudaEventRecord(comp_end);
