@@ -47,7 +47,7 @@ void array_process(double *input, double *output, int length, int iterations)
 }
 
 // copied from CPU baseline
-__global__ void GPU_process(double *input, double *output, int length, int iterations)
+__global__ void four_ifs(double *input, double *output, int length, int iterations)
 {
     int i = (blockIdx.x * blockDim.x) + threadIdx.x + 1;
     int j = (blockIdx.y * blockDim.y) + threadIdx.y + 1;
@@ -76,6 +76,58 @@ __global__ void GPU_process(double *input, double *output, int length, int itera
     if (posInArray == (length/2)*length+(length/2))
         output[(length/2)*length+(length/2)] = 1000;
 }
+
+__global__ void no_ifs(double *input, double *output, int length, int iterations)
+{
+    int i = (blockIdx.x * blockDim.x) + threadIdx.x + 1;
+    int j = (blockIdx.y * blockDim.y) + threadIdx.y + 1;
+
+    int posInArray = (i)*(length)+(j);
+
+    output[posInArray] = (input[(i-1)*(length)+(j-1)] +
+                            input[(i-1)*(length)+(j)]   +
+                            input[(i-1)*(length)+(j+1)] +
+                            input[(i)*(length)+(j-1)]   +
+                            input[(i)*(length)+(j)]     +
+                            input[(i)*(length)+(j+1)]   +
+                            input[(i+1)*(length)+(j-1)] +
+                            input[(i+1)*(length)+(j)]   +
+                            input[(i+1)*(length)+(j+1)] ) / 9;
+    
+    output[(length/2-1)*length+(length/2-1)] = 1000;
+    output[(length/2)*length+(length/2-1)] = 1000;
+    output[(length/2-1)*length+(length/2)] = 1000;
+    output[(length/2)*length+(length/2)] = 1000;
+}
+
+__global__ void GPU_process(double *input, double *output, int length, int iterations)
+{
+    int i = (blockIdx.x * blockDim.x) + threadIdx.x + 1;
+    int j = (blockIdx.y * blockDim.y) + threadIdx.y + 1;
+
+    int posInArray = (i)*(length)+(j);
+
+     if (posInArray == (length/2)*length+(length/2) || posInArray == (length/2-1)*length+(length/2-1) || posInArray == (length/2)*length+(length/2-1) || posInArray == (length/2-1)*length+(length/2)){
+        output[posInArray] = 1000;
+        return;
+     }
+
+    output[posInArray] = (input[(i-1)*(length)+(j-1)] +
+                            input[(i-1)*(length)+(j)]   +
+                            input[(i-1)*(length)+(j+1)] +
+                            input[(i)*(length)+(j-1)]   +
+                            input[(i)*(length)+(j)]     +
+                            input[(i)*(length)+(j+1)]   +
+                            input[(i+1)*(length)+(j-1)] +
+                            input[(i+1)*(length)+(j)]   +
+                            input[(i+1)*(length)+(j+1)] ) / 9;
+    
+   
+    
+    
+}
+
+
 
 
 
