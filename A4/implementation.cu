@@ -148,7 +148,96 @@ __global__ void no_rewrite(double *input, double *output, int length, int iterat
 }
 
 
+// not working for more than 76 length
+__global__ void shared_memory(double *input, double *output, int length, int iterations)
+{
+    int max_len = length * length;
 
+    int tidx = threadIdx.x + 1;
+    int tidy = threadIdx.y + 1;
+
+    int arrX = (blockIdx.x * blockDim.x) + threadIdx.x + 1;
+    int arrY = (blockIdx.y * blockDim.y) + threadIdx.y + 1;
+
+    int posInArray = arrX + length * arrY;
+
+    // in shared memory
+    __shared__ double shared_input[THREADS_PER_BLOCK + 2][THREADS_PER_BLOCK + 2];
+    // extern __shared__ double shared_output[64][n];
+    // copy data
+    
+    // shared_input[y][x]
+    shared_input[tidy][tidx] = (posInArray < max_len) ? input[posInArray] : 0;
+    if (arrX >= length - 1 || arrY >= length - 1) return;
+    // printf("%d, %d\n", arrX, arrY);
+
+    if (tidx == 1){
+        shared_input[tidy][0] = input[posInArray - 1];
+        if(tidy == 1){
+            shared_input[0][0] = input[posInArray - 1 - length];
+        }
+    }
+    if(tidy == 1){
+        shared_input[0][tidx] = input[posInArray - length];
+        if (tidx == THREADS_PER_BLOCK){
+            shared_input[0][THREADS_PER_BLOCK + 1] = input[posInArray + 1 - length];
+        }
+    }
+    if(tidx == THREADS_PER_BLOCK){
+        shared_input[tidy][THREADS_PER_BLOCK + 1] = (posInArray + 1 < max_len) ? input[posInArray + 1] : 0;
+        if(tidy == THREADS_PER_BLOCK){
+            shared_input[THREADS_PER_BLOCK + 1][THREADS_PER_BLOCK + 1] = (posInArray + 1 + length < max_len) ? input[posInArray + 1 + length] : 0;
+        }
+    }
+    if (tidy == THREADS_PER_BLOCK){
+            shared_input[THREADS_PER_BLOCK + 1][tidx] = (posInArray + length < max_len) ? input[posInArray + length] : 0;
+            if(tidx == 1){
+                shared_input[THREADS_PER_BLOCK + 1][0] = (posInArray - 1 + length < max_len) ? input[posInArray - 1 + length] : 0;
+            }
+    }
+    __syncthreads();
+
+    if (posInArray == (length/2-1)*length+(length/2-1) ||
+        posInArray == (length/2)*length+(length/2-1)   ||
+        posInArray == (length/2-1)*length+(length/2)   ||
+        posInArray == (length/2)*length+(length/2))
+    {
+        output[posInArray] = 1000;
+        // __syncthreads();
+        return;
+    }
+
+    output[posInArray] = (
+                            shared_input[tidy-1][tidx-1]    +
+                            shared_input[tidy-1][tidx  ]    +
+                            shared_input[tidy-1][tidx+1]    +
+                            shared_input[tidy  ][tidx-1]    +
+                            shared_input[tidy  ][tidx  ]    +
+                            shared_input[tidy  ][tidx+1]    +
+                            shared_input[tidy+1][tidx-1]    +
+                            shared_input[tidy+1][tidx  ]    +
+                            shared_input[tidy+1][tidx+1]
+                        ) / 9;
+    __syncthreads();
+
+    // if(tidx == 1 && tidy == 1 && blockIdx.x == 0 && blockIdx.y == 0){
+    //     printf("shared -------------------------------------\n");
+    //     for(int y = 0; y < THREADS_PER_BLOCK + 2; y++){
+    //         for(int x = 0; x < THREADS_PER_BLOCK + 2; x++){
+    //             printf("%lf, ", shared_input[y][x]);
+    //         }
+    //         printf("\n");
+    //     }
+
+    //     printf("output -------------------------------------\n");
+    //     for(int y = 0; y < length; y++){
+    //         for(int x = 0; x < length; x++){
+    //             printf("%lf, ", output[x + length * y]);
+    //         }
+    //         printf("\n");
+    //     }
+    // }
+}
 
 
 // GPU Optimized function
