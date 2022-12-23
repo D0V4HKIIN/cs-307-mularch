@@ -100,7 +100,7 @@ __global__ void no_ifs(double *input, double *output, int length, int iterations
     output[(length/2)*length+(length/2)] = 1000;
 }
 
-__global__ void GPU_process(double *input, double *output, int length, int iterations)
+__global__ void one_if(double *input, double *output, int length, int iterations)
 {
     int i = (blockIdx.x * blockDim.x) + threadIdx.x + 1;
     int j = (blockIdx.y * blockDim.y) + threadIdx.y + 1;
@@ -122,8 +122,28 @@ __global__ void GPU_process(double *input, double *output, int length, int itera
                             input[(i+1)*(length)+(j)]   +
                             input[(i+1)*(length)+(j+1)] ) / 9;
     
-   
-    
+}
+__global__ void no_rewrite(double *input, double *output, int length, int iterations)
+{
+    int i = (blockIdx.x * blockDim.x) + threadIdx.x + 1;
+    int j = (blockIdx.y * blockDim.y) + threadIdx.y + 1;
+
+    int posInArray = (i)*(length)+(j);
+
+     if (posInArray == (length/2)*length+(length/2) || posInArray == (length/2-1)*length+(length/2-1) || posInArray == (length/2)*length+(length/2-1) || posInArray == (length/2-1)*length+(length/2)){
+        // output[posInArray] = 1000;
+        return;
+     }
+
+    output[posInArray] = (input[(i-1)*(length)+(j-1)] +
+                            input[(i-1)*(length)+(j)]   +
+                            input[(i-1)*(length)+(j+1)] +
+                            input[(i)*(length)+(j-1)]   +
+                            input[(i)*(length)+(j)]     +
+                            input[(i)*(length)+(j+1)]   +
+                            input[(i+1)*(length)+(j-1)] +
+                            input[(i+1)*(length)+(j)]   +
+                            input[(i+1)*(length)+(j+1)] ) / 9;
     
 }
 
@@ -184,7 +204,7 @@ void GPU_array_process(double *input, double *output, int length, int iterations
 
     for(int n=0; n<iterations; n++)
     {
-        GPU_process<<<nBlksDim, thrsPerBlockDim>>>(gpu_input, gpu_output, length, iterations);
+        one_if<<<nBlksDim, thrsPerBlockDim>>>(gpu_input, gpu_output, length, iterations);
 
         cudaDeviceSynchronize();
         
